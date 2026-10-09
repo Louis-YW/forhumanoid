@@ -209,15 +209,11 @@ def run_experiment(
             "collection_date": demo.metadata.get("collection_date", "unspecified"),
             "source_filename": demo.metadata.get("source_filename", "unspecified"),
             "valid_detection_fraction": demo.metadata.get("valid_detection_fraction"),
-            "per_frame_calibration_fraction": demo.metadata.get(
-                "per_frame_calibration_fraction"
-            ),
+            "per_frame_calibration_fraction": demo.metadata.get("per_frame_calibration_fraction"),
         },
         "evaluation": {
             "seeds": seeds,
-            "success_threshold_m": float(
-                config["simulation"].get("success_threshold_m", 0.055)
-            ),
+            "success_threshold_m": float(config["simulation"].get("success_threshold_m", 0.055)),
             "clearance_metric": "minimum pusher-to-obstacle surface distance",
         },
         "aggregate": aggregate,

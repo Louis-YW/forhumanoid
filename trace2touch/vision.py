@@ -162,7 +162,9 @@ def _select_calibrated_object(
         continuity_score = (
             1.0 if previous_m is None else float(np.exp(-distance_m / max(max_step_m, 1e-6)))
         )
-        confidence = float(np.clip(0.45 * size_score + 0.35 * circularity + 0.20 * continuity_score, 0, 1))
+        confidence = float(
+            np.clip(0.45 * size_score + 0.35 * circularity + 0.20 * continuity_score, 0, 1)
+        )
         score = confidence + (0.30 * continuity_score if previous_m is not None else 0.0)
         candidates.append((score, centre_px, centre_m, confidence))
 
