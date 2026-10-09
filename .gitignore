@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Raw recordings stay local unless explicitly selected for the public submission.
+data/raw/*
+!data/raw/.gitkeep
+
+# Reproducible run products. Curated examples under artifacts/ are committed.
+runs/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+MUJOCO_LOG.TXT

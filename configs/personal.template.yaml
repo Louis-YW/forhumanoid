@@ -1,0 +1,81 @@
+# Copy this file to configs/personal.yaml and fill in the three provenance fields.
+# Keep the raw phone video private if it contains identifying information; the
+# derived trajectory stores a SHA-256 hash that makes the experiment auditable.
+provenance:
+  collected_by: REPLACE_WITH_YOUR_NAME
+  collection_date: YYYY-MM-DD
+  synthetic: false
+  notes: REPLACE_WITH_A_ONE_SENTENCE_DESCRIPTION_OF_WHAT_YOU_PUSHED
+
+vision:
+  calibration_frames: 30
+  marker_world_m:
+    0: [0.000, 0.000]
+    1: [0.247, 0.000]
+    2: [0.247, 0.160]
+    3: [0.000, 0.160]
+  # Default range tracks a vivid magenta/pink sticker or object.
+  object_hsv_ranges:
+    - lower: [135, 70, 60]
+      upper: [175, 255, 255]
+  min_area_px: 120
+  max_area_fraction: 0.08
+  smoothing_window: 11
+  motion_threshold_m_s: 0.004
+  motion_pad_frames: 6
+  overlay_stride: 3
+
+trajectory:
+  samples: 72
+
+retarget:
+  target_span_m: 0.30
+  min_scale: 0.6
+  max_scale: 3.0
+  rotation_deg: 0.0
+  sim_center_xy: [0.08, 0.00]
+  contact_overlap_m: 0.010
+  approach_samples: 10
+  approach_distance_m: 0.065
+  follow_through_samples: 10
+  follow_through_distance_m: 0.140
+
+simulation:
+  dt: 0.005
+  substeps: 8
+  max_joint_speed_rad_s: 3.0
+  feedback_gain: 0.00
+  max_feedback_m: 0.035
+  puck_radius_m: 0.038
+  puck_half_height_m: 0.018
+  puck_mass_kg: 0.12
+  puck_friction: 0.50
+  ee_radius_m: 0.035
+  success_threshold_m: 0.065
+  # Optional: measure the centre and radius from marker 0 (top-left marker centre).
+  # Remove this entry if your recording has no obstacle.
+  obstacles:
+    - board_xy_m: [0.148, 0.102]
+      board_radius_m: 0.027
+      height_m: 0.09
+
+optimization:
+  seed: 11
+  knots: 5
+  population: 48
+  elite_fraction: 0.18
+  iterations: 6
+  domain_randomization_rollouts: 4
+  robust_tail_weight: 0.50
+  initial_std_m: 0.030
+  max_residual_m: 0.100
+  distribution_smoothing: 0.25
+  final_distance_weight: 18.0
+  collision_weight: 45.0
+  prior_weight: 1.2
+  roughness_weight: 18.0
+  energy_weight: 0.012
+
+evaluation:
+  seeds: 20
+  gif_fps: 12

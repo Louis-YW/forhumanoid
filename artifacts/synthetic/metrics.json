@@ -1,0 +1,86 @@
+{
+  "aggregate": {
+    "optimized": {
+      "control_energy_mean": 0.0011356069462943887,
+      "final_distance_mean_m": 0.02811268384170318,
+      "final_distance_std_m": 0.006593017810833939,
+      "min_clearance_mean_m": 0.05178984484897904,
+      "success_rate": 1.0
+    },
+    "straight": {
+      "control_energy_mean": 0.08754868186541215,
+      "final_distance_mean_m": 0.17595393450160887,
+      "final_distance_std_m": 0.03341983491467482,
+      "min_clearance_mean_m": -0.0014231751743160354,
+      "success_rate": 0.0
+    },
+    "video_prior": {
+      "control_energy_mean": 0.0009166099425613796,
+      "final_distance_mean_m": 0.030977358232008534,
+      "final_distance_std_m": 0.005740782565262115,
+      "min_clearance_mean_m": 0.0808459522746546,
+      "success_rate": 1.0
+    }
+  },
+  "cem": {
+    "best_cost": 0.47921737655191177,
+    "history": [
+      {
+        "best_cost": 0.5572450803871543,
+        "elite_mean_cost": 0.5937197168885459,
+        "iteration": 0.0,
+        "std_mean_m": 0.02300473189326329
+      },
+      {
+        "best_cost": 0.5301960970822878,
+        "elite_mean_cost": 0.5555799600213838,
+        "iteration": 1.0,
+        "std_mean_m": 0.019073565233650766
+      },
+      {
+        "best_cost": 0.49904644479005733,
+        "elite_mean_cost": 0.5329247705242961,
+        "iteration": 2.0,
+        "std_mean_m": 0.01780463051201959
+      },
+      {
+        "best_cost": 0.49904644479005733,
+        "elite_mean_cost": 0.5179188039311969,
+        "iteration": 3.0,
+        "std_mean_m": 0.015210321839766661
+      },
+      {
+        "best_cost": 0.47921737655191177,
+        "elite_mean_cost": 0.4951183159326232,
+        "iteration": 4.0,
+        "std_mean_m": 0.012669624123084085
+      }
+    ]
+  },
+  "nominal": {
+    "optimized": {
+      "control_energy": 0.0011582710345497676,
+      "final_distance_m": 0.0241557875288371,
+      "min_clearance_m": 0.051463305493367695,
+      "success": true
+    },
+    "straight": {
+      "control_energy": 0.08742592889550485,
+      "final_distance_m": 0.1952874468284371,
+      "min_clearance_m": -0.001419659232897899,
+      "success": false
+    },
+    "video_prior": {
+      "control_energy": 0.0009350139814917794,
+      "final_distance_m": 0.03512056446568967,
+      "min_clearance_m": 0.08048706213691609,
+      "success": true
+    }
+  },
+  "provenance": {
+    "collected_by": "software smoke test",
+    "collection_date": "2026-10-09",
+    "source_sha256": "9de6a959eb1a2eb46378a3775868277676e1f00791a13177f1199ec392231b77",
+    "synthetic": true
+  }
+}

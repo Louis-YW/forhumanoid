@@ -1,0 +1,81 @@
+# Deterministic end-to-end smoke test. This is deliberately labelled synthetic
+# and must never be presented as the applicant-collected result.
+provenance:
+  collected_by: software smoke test
+  collection_date: 2026-10-09
+  synthetic: true
+  notes: Perspective-warped render used to test calibration, tracking and evaluation.
+
+vision:
+  calibration_frames: 18
+  marker_world_m:
+    0: [0.000, 0.000]
+    1: [0.247, 0.000]
+    2: [0.247, 0.160]
+    3: [0.000, 0.160]
+  object_hsv_ranges:
+    - lower: [135, 80, 70]
+      upper: [175, 255, 255]
+  min_area_px: 180
+  max_area_fraction: 0.03
+  smoothing_window: 9
+  motion_threshold_m_s: 0.003
+  motion_pad_frames: 4
+  overlay_stride: 3
+
+trajectory:
+  samples: 80
+
+retarget:
+  target_span_m: 0.30
+  min_scale: 0.6
+  max_scale: 3.0
+  rotation_deg: 0.0
+  sim_center_xy: [0.08, 0.00]
+  contact_overlap_m: 0.010
+  approach_samples: 12
+  approach_distance_m: 0.065
+  follow_through_samples: 10
+  follow_through_distance_m: 0.140
+
+simulation:
+  dt: 0.005
+  substeps: 8
+  max_joint_speed_rad_s: 3.0
+  feedback_gain: 0.00
+  max_feedback_m: 0.035
+  puck_radius_m: 0.038
+  puck_half_height_m: 0.018
+  puck_mass_kg: 0.12
+  puck_friction: 0.50
+  ee_radius_m: 0.035
+  success_threshold_m: 0.065
+  obstacles:
+    - board_xy_m: [0.148, 0.102]
+      board_radius_m: 0.027
+      height_m: 0.09
+
+optimization:
+  seed: 11
+  knots: 5
+  population: 36
+  elite_fraction: 0.20
+  iterations: 5
+  domain_randomization_rollouts: 3
+  robust_tail_weight: 0.50
+  initial_std_m: 0.028
+  max_residual_m: 0.090
+  distribution_smoothing: 0.25
+  final_distance_weight: 18.0
+  collision_weight: 45.0
+  prior_weight: 1.2
+  roughness_weight: 18.0
+  energy_weight: 0.012
+
+evaluation:
+  seeds: 10
+  gif_fps: 12
+
+synthetic:
+  fps: 30
+  frames: 120

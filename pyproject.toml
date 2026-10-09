@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trace2touch"
+version = "0.1.0"
+description = "Retarget one personally recorded tabletop demonstration to a simulated robot arm."
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "Louis YW" }]
+dependencies = [
+  "imageio>=2.34",
+  "imageio-ffmpeg>=0.5",
+  "matplotlib>=3.8",
+  "mujoco>=3.2",
+  "numpy>=1.26",
+  "opencv-contrib-python-headless>=4.9",
+  "Pillow>=10.0",
+  "PyYAML>=6.0",
+  "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.9"]
+
+[project.scripts]
+trace2touch = "trace2touch.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["trace2touch*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
