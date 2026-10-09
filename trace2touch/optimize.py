@@ -108,6 +108,7 @@ def optimise_residual(
 
     final_weight = float(options.get("final_distance_weight", 16.0))
     collision_weight = float(options.get("collision_weight", 30.0))
+    clearance_margin = float(options.get("clearance_margin_m", 0.0))
     prior_weight = float(options.get("prior_weight", 0.8))
     roughness_weight = float(options.get("roughness_weight", 20.0))
     energy_weight = float(options.get("energy_weight", 0.015))
@@ -151,15 +152,20 @@ def optimise_residual(
             mean_distance = float(distances.mean())
             tail_weight = float(options.get("robust_tail_weight", 0.0))
             final_distance = mean_distance + tail_weight * float(distances.max() - mean_distance)
-            negative_clearance = float(
-                np.mean([max(0.0, -item.min_clearance_m) for item in rollouts])
+            clearance_shortfalls = np.asarray(
+                [max(0.0, clearance_margin - item.min_clearance_m) for item in rollouts],
+                dtype=float,
+            )
+            mean_shortfall = float(clearance_shortfalls.mean())
+            clearance_cost = mean_shortfall + tail_weight * float(
+                clearance_shortfalls.max() - mean_shortfall
             )
             control_energy = float(np.mean([item.control_energy for item in rollouts]))
             confidence_weight = 0.2 + 0.8 * plan.confidence
             prior_cost = float(np.mean(confidence_weight * np.sum(residual**2, axis=1)))
             cost = (
                 final_weight * final_distance
-                + collision_weight * negative_clearance**2
+                + collision_weight * clearance_cost**2
                 + prior_weight * prior_cost
                 + roughness_weight * _trajectory_roughness(candidate)
                 + energy_weight * control_energy

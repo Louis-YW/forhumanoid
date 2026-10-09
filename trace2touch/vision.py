@@ -91,6 +91,95 @@ def detect_coloured_object(
     return centroid, confidence, mask
 
 
+def _select_calibrated_object(
+    frame_bgr: np.ndarray,
+    homography: np.ndarray,
+    hsv_ranges: list[dict[str, list[int]]],
+    *,
+    min_area_px: float,
+    max_area_fraction: float,
+    object_radius_m: float,
+    previous_m: np.ndarray | None,
+    board_size_m: tuple[float, float],
+    min_area_ratio: float,
+    max_area_ratio: float,
+    min_circularity: float,
+    max_step_m: float,
+    board_margin_m: float,
+) -> tuple[np.ndarray | None, np.ndarray | None, float, np.ndarray]:
+    """Select the colour blob that is physically consistent with the known object.
+
+    The largest-blob heuristic is useful for a clean synthetic scene, but it can
+    jump to a similarly coloured sleeve. Metric size, board bounds and temporal
+    continuity make the choice auditable and independent of image resolution.
+    """
+    hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
+    for bounds in hsv_ranges:
+        lower = np.asarray(bounds["lower"], dtype=np.uint8)
+        upper = np.asarray(bounds["upper"], dtype=np.uint8)
+        mask = cv2.bitwise_or(mask, cv2.inRange(hsv, lower, upper))
+    kernel = np.ones((5, 5), dtype=np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    max_area_px = frame_bgr.shape[0] * frame_bgr.shape[1] * max_area_fraction
+    expected_area_m2 = np.pi * object_radius_m**2
+    width_m, height_m = board_size_m
+    candidates: list[tuple[float, np.ndarray, np.ndarray, float]] = []
+    for contour in contours:
+        area_px = float(cv2.contourArea(contour))
+        if not min_area_px <= area_px <= max_area_px:
+            continue
+        moments = cv2.moments(contour)
+        if moments["m00"] <= 1e-6:
+            continue
+        centre_px = np.array(
+            [moments["m10"] / moments["m00"], moments["m01"] / moments["m00"]],
+            dtype=float,
+        )
+        centre_m = transform_points(centre_px[None, :], homography)[0]
+        if not (
+            -board_margin_m <= centre_m[0] <= width_m + board_margin_m
+            and -board_margin_m <= centre_m[1] <= height_m + board_margin_m
+        ):
+            continue
+        contour_m = transform_points(contour.reshape(-1, 2), homography).astype(np.float32)
+        area_m2 = abs(float(cv2.contourArea(contour_m.reshape(-1, 1, 2))))
+        area_ratio = area_m2 / max(expected_area_m2, 1e-12)
+        if not min_area_ratio <= area_ratio <= max_area_ratio:
+            continue
+        perimeter_px = max(float(cv2.arcLength(contour, True)), 1e-6)
+        circularity = float(np.clip(4 * np.pi * area_px / perimeter_px**2, 0.0, 1.0))
+        if circularity < min_circularity:
+            continue
+        distance_m = 0.0 if previous_m is None else float(np.linalg.norm(centre_m - previous_m))
+        if previous_m is not None and distance_m > max_step_m:
+            continue
+
+        size_score = float(np.exp(-abs(np.log(max(area_ratio, 1e-6)))))
+        continuity_score = (
+            1.0 if previous_m is None else float(np.exp(-distance_m / max(max_step_m, 1e-6)))
+        )
+        confidence = float(np.clip(0.45 * size_score + 0.35 * circularity + 0.20 * continuity_score, 0, 1))
+        score = confidence + (0.30 * continuity_score if previous_m is not None else 0.0)
+        candidates.append((score, centre_px, centre_m, confidence))
+
+    if not candidates:
+        return None, None, 0.0, mask
+    _, centre_px, centre_m, confidence = max(candidates, key=lambda item: item[0])
+    return centre_px, centre_m, confidence, mask
+
+
+def _longest_false_run(valid: np.ndarray) -> int:
+    longest = current = 0
+    for value in valid:
+        current = 0 if value else current + 1
+        longest = max(longest, current)
+    return longest
+
+
 def _interpolate_and_smooth(
     time_s: np.ndarray,
     points: np.ndarray,
@@ -156,12 +245,10 @@ def extract_demonstration(
     fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
     calibration_frames = int(config["vision"].get("calibration_frames", 20))
     marker_samples: dict[int, list[np.ndarray]] = defaultdict(list)
-    cached_frames: list[np.ndarray] = []
     for _ in range(calibration_frames):
         ok, frame = cap.read()
         if not ok:
             break
-        cached_frames.append(frame)
         for marker_id, centre in detect_markers(frame).items():
             marker_samples[marker_id].append(centre)
     marker_world = {
@@ -174,36 +261,84 @@ def extract_demonstration(
         if samples
     }
     homography = estimate_homography(observed, marker_world)
+    marker_width = max(x for x, _ in marker_world.values()) - min(
+        x for x, _ in marker_world.values()
+    )
+    marker_height = max(y for _, y in marker_world.values()) - min(
+        y for _, y in marker_world.values()
+    )
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    points_px: list[np.ndarray] = []
+    points_m_raw: list[np.ndarray] = []
     confidences: list[float] = []
     overlays: list[np.ndarray] = []
+    per_frame_calibrations = 0
+    previous_m: np.ndarray | None = None
     frame_index = 0
     overlay_stride = max(1, int(config["vision"].get("overlay_stride", 2)))
+    object_radius_m = float(config["vision"].get("object_radius_m", 0.0))
     while True:
         ok, frame = cap.read()
         if not ok:
             break
-        centroid, confidence, _ = detect_coloured_object(
-            frame,
-            config["vision"]["object_hsv_ranges"],
-            min_area_px=float(config["vision"].get("min_area_px", 80)),
-            max_area_fraction=float(config["vision"].get("max_area_fraction", 0.08)),
-        )
-        points_px.append(
-            centroid if centroid is not None else np.array([np.nan, np.nan], dtype=float)
+        frame_markers = detect_markers(frame)
+        if set(marker_world).issubset(frame_markers):
+            frame_homography = estimate_homography(frame_markers, marker_world)
+            per_frame_calibrations += 1
+        else:
+            frame_homography = homography
+
+        if object_radius_m > 0:
+            centroid, point_m, confidence, _ = _select_calibrated_object(
+                frame,
+                frame_homography,
+                config["vision"]["object_hsv_ranges"],
+                min_area_px=float(config["vision"].get("min_area_px", 80)),
+                max_area_fraction=float(config["vision"].get("max_area_fraction", 0.08)),
+                object_radius_m=object_radius_m,
+                previous_m=previous_m,
+                board_size_m=(marker_width, marker_height),
+                min_area_ratio=float(config["vision"].get("min_area_ratio", 0.25)),
+                max_area_ratio=float(config["vision"].get("max_area_ratio", 2.0)),
+                min_circularity=float(config["vision"].get("min_circularity", 0.20)),
+                max_step_m=float(config["vision"].get("max_step_m", 0.020)),
+                board_margin_m=float(config["vision"].get("board_margin_m", 0.015)),
+            )
+        else:
+            centroid, confidence, _ = detect_coloured_object(
+                frame,
+                config["vision"]["object_hsv_ranges"],
+                min_area_px=float(config["vision"].get("min_area_px", 80)),
+                max_area_fraction=float(config["vision"].get("max_area_fraction", 0.08)),
+            )
+            point_m = (
+                transform_points(centroid[None, :], frame_homography)[0]
+                if centroid is not None
+                else None
+            )
+        if point_m is not None:
+            previous_m = point_m
+        points_m_raw.append(
+            point_m if point_m is not None else np.array([np.nan, np.nan], dtype=float)
         )
         confidences.append(confidence)
         if overlay_path is not None and frame_index % overlay_stride == 0:
             draw = frame.copy()
             if centroid is not None:
                 cv2.circle(draw, tuple(np.round(centroid).astype(int)), 10, (0, 255, 0), 3)
-            for marker_id, centre in observed.items():
+            for marker_id, centre in frame_markers.items():
                 pt = tuple(np.round(centre).astype(int))
                 cv2.circle(draw, pt, 5, (255, 150, 0), -1)
                 cv2.putText(
                     draw, str(marker_id), pt, cv2.FONT_HERSHEY_SIMPLEX, 0.6, (20, 20, 20), 2
+                )
+            max_width = int(config["vision"].get("overlay_max_width_px", draw.shape[1]))
+            if max_width > 0 and draw.shape[1] > max_width:
+                scale = max_width / draw.shape[1]
+                draw = cv2.resize(
+                    draw,
+                    (max_width, round(draw.shape[0] * scale)),
+                    interpolation=cv2.INTER_AREA,
                 )
             overlays.append(cv2.cvtColor(draw, cv2.COLOR_BGR2RGB))
         frame_index += 1
@@ -211,11 +346,9 @@ def extract_demonstration(
     if frame_index < 4:
         raise ValueError("video contains fewer than four readable frames")
 
-    points_px_array = np.asarray(points_px, dtype=float)
+    points_m = np.asarray(points_m_raw, dtype=float)
     confidence = np.asarray(confidences, dtype=float)
-    valid = np.isfinite(points_px_array).all(axis=1)
-    points_m = np.full_like(points_px_array, np.nan)
-    points_m[valid] = transform_points(points_px_array[valid], homography)
+    valid = np.isfinite(points_m).all(axis=1)
     time_s = np.arange(frame_index, dtype=float) / fps
     points_m = _interpolate_and_smooth(
         time_s,
@@ -242,21 +375,21 @@ def extract_demonstration(
         overlay_path.parent.mkdir(parents=True, exist_ok=True)
         imageio.mimsave(overlay_path, overlays, fps=max(1.0, fps / overlay_stride), loop=0)
 
-    width = max(x for x, _ in marker_world.values()) - min(x for x, _ in marker_world.values())
-    height = max(y for _, y in marker_world.values()) - min(y for _, y in marker_world.values())
     provenance = config.get("provenance", {})
     config_snapshot = {key: value for key, value in config.items() if key != "_config_path"}
     demo = Demonstration(
         time_s=time_s,
         object_xy_m=points_m,
         confidence=confidence,
-        workspace_size_m=(float(width), float(height)),
+        workspace_size_m=(float(marker_width), float(marker_height)),
         source_sha256=sha256_file(video_path),
         metadata={
             "source_filename": video_path.name,
             "fps": fps,
             "frames": frame_index,
             "valid_detection_fraction": float(valid.mean()),
+            "longest_interpolated_gap_frames": _longest_false_run(valid),
+            "per_frame_calibration_fraction": float(per_frame_calibrations / frame_index),
             "marker_centres_px": {str(k): v.tolist() for k, v in observed.items()},
             "homography_px_to_m": homography.tolist(),
             "collected_by": provenance.get("collected_by", "unspecified"),

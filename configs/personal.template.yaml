@@ -18,12 +18,21 @@ vision:
   object_hsv_ranges:
     - lower: [135, 70, 60]
       upper: [175, 255, 255]
+  # Set this to the measured radius to enable metric size, board-bound and
+  # temporal-continuity checks instead of relying on the largest colour blob.
+  object_radius_m: 0.016
   min_area_px: 120
   max_area_fraction: 0.08
+  min_area_ratio: 0.25
+  max_area_ratio: 2.00
+  min_circularity: 0.20
+  max_step_m: 0.020
+  board_margin_m: 0.015
   smoothing_window: 11
   motion_threshold_m_s: 0.004
   motion_pad_frames: 6
   overlay_stride: 3
+  overlay_max_width_px: 540
 
 trajectory:
   samples: 72

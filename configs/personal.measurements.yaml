@@ -1,0 +1,27 @@
+# Physical measurements reported by the applicant and confirmed against the
+# calibrated recording. The runnable experiment is configs/personal.yaml.
+source: applicant_reported_measurements
+recording_status: captured_and_validated
+units: metres
+
+bottle_cap:
+  colour: magenta
+  diameter_m: 0.032
+  radius_m: 0.016
+  height_m: null
+
+obstacle:
+  shape_description: Approximately conical object with an irregular top
+  base_diameter_m: 0.046
+  base_radius_m: 0.023
+  approximate_height_m: 0.100
+  centre_board_xy_m: [0.155, 0.108]
+
+capture_guidance:
+  recommended_edge_clearance_m: [0.010, 0.020]
+  corresponding_centre_distance_m: [0.049, 0.059]
+  notes: >-
+    Measure clearance from the obstacle base, not the narrower top. Keep the
+    camera close to directly overhead so the tall obstacle does not hide the
+    bottle cap or any calibration marker. The centre-distance range assumes
+    the obstacle's widest footprint is its reported 46 mm diameter base.

@@ -1,0 +1,88 @@
+# Final applicant-collected experiment used in the public submission.
+provenance:
+  collected_by: Louis YW
+  collection_date: 2026-10-09
+  synthetic: false
+  notes: Overhead phone recording of a 32 mm magenta cap pushed around a measured conical obstacle.
+
+vision:
+  calibration_frames: 30
+  marker_world_m:
+    0: [0.000, 0.000]
+    1: [0.247, 0.000]
+    2: [0.247, 0.160]
+    3: [0.000, 0.160]
+  # Measured from the applicant's HDR recording. Low saturation retains the
+  # cap's highlights; metric size/continuity reject unrelated pixels.
+  object_hsv_ranges:
+    - lower: [155, 25, 60]
+      upper: [179, 255, 255]
+  object_radius_m: 0.016
+  min_area_px: 300
+  max_area_fraction: 0.03
+  min_area_ratio: 0.25
+  max_area_ratio: 2.00
+  min_circularity: 0.20
+  max_step_m: 0.020
+  board_margin_m: 0.015
+  smoothing_window: 15
+  motion_threshold_m_s: 0.004
+  motion_pad_frames: 8
+  overlay_stride: 12
+  overlay_max_width_px: 320
+
+trajectory:
+  samples: 72
+
+retarget:
+  target_span_m: 0.30
+  min_scale: 0.6
+  max_scale: 3.0
+  rotation_deg: 0.0
+  sim_center_xy: [0.08, 0.00]
+  contact_overlap_m: 0.010
+  approach_samples: 10
+  approach_distance_m: 0.065
+  follow_through_samples: 10
+  follow_through_distance_m: 0.140
+
+simulation:
+  dt: 0.005
+  substeps: 8
+  max_joint_speed_rad_s: 3.0
+  feedback_gain: 0.00
+  max_feedback_m: 0.035
+  puck_radius_m: 0.038
+  puck_half_height_m: 0.018
+  puck_mass_kg: 0.12
+  puck_friction: 0.50
+  ee_radius_m: 0.035
+  success_threshold_m: 0.065
+  obstacles:
+    # Base contact centre measured from the calibrated video; the physical
+    # object has a 46 mm base diameter and is approximately 100 mm tall.
+    - board_xy_m: [0.155, 0.108]
+      board_radius_m: 0.023
+      height_m: 0.100
+
+optimization:
+  seed: 11
+  knots: 5
+  population: 48
+  elite_fraction: 0.18
+  iterations: 6
+  domain_randomization_rollouts: 4
+  robust_tail_weight: 0.50
+  initial_std_m: 0.012
+  max_residual_m: 0.040
+  distribution_smoothing: 0.25
+  final_distance_weight: 18.0
+  collision_weight: 1000.0
+  clearance_margin_m: 0.015
+  prior_weight: 30.0
+  roughness_weight: 18.0
+  energy_weight: 0.012
+
+evaluation:
+  seeds: 20
+  gif_fps: 12

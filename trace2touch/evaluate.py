@@ -103,6 +103,7 @@ def _write_report(
     demo: Demonstration,
     aggregate: dict[str, dict[str, float]],
     optimisation: OptimisationResult,
+    config: dict[str, Any],
 ) -> None:
     provenance_label = (
         "synthetic smoke test" if demo.metadata.get("synthetic") else "personal recording"
@@ -113,8 +114,10 @@ def _write_report(
         f"Data source: **{provenance_label}**",
         f"SHA-256: `{demo.source_sha256}`",
         f"Valid colour detections: {100 * float(demo.metadata.get('valid_detection_fraction', 0)):.1f}%",
+        f"Per-frame marker calibration: {100 * float(demo.metadata.get('per_frame_calibration_fraction', 0)):.1f}%",
+        f"Evaluation domains: {int(config['evaluation'].get('seeds', 12))}",
         "",
-        "| Controller | Success rate | Final error (mean ± std) | Mean clearance |",
+        "| Controller | Success rate | Final error (mean ± std) | Mean pusher clearance |",
         "|---|---:|---:|---:|",
     ]
     for name in ("straight", "video_prior", "optimized"):
@@ -204,6 +207,18 @@ def run_experiment(
             "synthetic": bool(demo.metadata.get("synthetic", False)),
             "collected_by": demo.metadata.get("collected_by", "unspecified"),
             "collection_date": demo.metadata.get("collection_date", "unspecified"),
+            "source_filename": demo.metadata.get("source_filename", "unspecified"),
+            "valid_detection_fraction": demo.metadata.get("valid_detection_fraction"),
+            "per_frame_calibration_fraction": demo.metadata.get(
+                "per_frame_calibration_fraction"
+            ),
+        },
+        "evaluation": {
+            "seeds": seeds,
+            "success_threshold_m": float(
+                config["simulation"].get("success_threshold_m", 0.055)
+            ),
+            "clearance_metric": "minimum pusher-to-obstacle surface distance",
         },
         "aggregate": aggregate,
         "cem": {"best_cost": optimisation.best_cost, "history": optimisation.history},
@@ -219,7 +234,7 @@ def run_experiment(
 
     _plot_paths(plan, nominal, policies, output_dir / "trajectory_comparison.png")
     _plot_optimisation(optimisation, output_dir / "cem_convergence.png")
-    _write_report(output_dir / "REPORT.md", demo, aggregate, optimisation)
+    _write_report(output_dir / "REPORT.md", demo, aggregate, optimisation, config)
 
     if render:
         rendered = env.rollout(

@@ -31,8 +31,8 @@ trace2touch extract \
   --overlay runs/personal/tracking_overlay.gif
 ```
 
-Inspect the overlay. The green circle must remain on the object. The command prints `valid_detection_fraction`; repeat the take or adjust `object_hsv_ranges` when it is below 0.9.
+Inspect the overlay. The green circle must remain on the object. The command prints `valid_detection_fraction`; repeat the take or adjust `object_hsv_ranges` when it is below 0.9. Set `object_radius_m` to enable metric size, board-bound, and temporal-continuity rejection of colour distractors.
 
 ## Public-data check
 
-The raw recording is ignored by default. If a short clip is published, crop audio and identifying background details first. Never relabel the synthetic smoke test as personal data. Keep the derived `.npz`, the tracking overlay, and the source SHA-256 in the public result so a reviewer can see exactly how the recording entered the system.
+Raw recordings under `data/raw/` are ignored by default. A recording should only be placed under `data/public/` after the collector decides that its audio, background, and camera metadata are suitable for publication. Never relabel the synthetic smoke test as personal data. Keep the derived `.npz`, the tracking overlay, and the source SHA-256 in the public result so a reviewer can see exactly how the recording entered the system.

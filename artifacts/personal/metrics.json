@@ -1,0 +1,121 @@
+{
+  "aggregate": {
+    "optimized": {
+      "control_energy_mean": 0.0010957902232695128,
+      "final_distance_mean_m": 0.052332867236707305,
+      "final_distance_std_m": 0.002982306549091608,
+      "min_clearance_mean_m": 0.021876960026325533,
+      "success_rate": 1.0
+    },
+    "straight": {
+      "control_energy_mean": 0.04496731168075621,
+      "final_distance_mean_m": 0.1403531859812019,
+      "final_distance_std_m": 0.025425492158684934,
+      "min_clearance_mean_m": -0.0011229312115738181,
+      "success_rate": 0.05
+    },
+    "video_prior": {
+      "control_energy_mean": 0.0011954556535943343,
+      "final_distance_mean_m": 0.05707470952411479,
+      "final_distance_std_m": 0.0028479286717454605,
+      "min_clearance_mean_m": 0.04075476817118372,
+      "success_rate": 1.0
+    }
+  },
+  "cem": {
+    "best_cost": 0.996225874835384,
+    "history": [
+      {
+        "best_cost": 1.038405490971775,
+        "elite_mean_cost": 1.0514427452294566,
+        "iteration": 0.0,
+        "std_mean_m": 0.00967405874269953
+      },
+      {
+        "best_cost": 1.0265280971952464,
+        "elite_mean_cost": 1.0381122471510373,
+        "iteration": 1.0,
+        "std_mean_m": 0.00891913500848655
+      },
+      {
+        "best_cost": 1.0188053629404488,
+        "elite_mean_cost": 1.0269465955362098,
+        "iteration": 2.0,
+        "std_mean_m": 0.0068989264315558645
+      },
+      {
+        "best_cost": 1.0120359663500342,
+        "elite_mean_cost": 1.0148768308080858,
+        "iteration": 3.0,
+        "std_mean_m": 0.005389667513837056
+      },
+      {
+        "best_cost": 0.9986484617633021,
+        "elite_mean_cost": 1.007622443446844,
+        "iteration": 4.0,
+        "std_mean_m": 0.004899539243240677
+      },
+      {
+        "best_cost": 0.996225874835384,
+        "elite_mean_cost": 1.00293668132307,
+        "iteration": 5.0,
+        "std_mean_m": 0.004815281656984846
+      }
+    ]
+  },
+  "evaluation": {
+    "clearance_metric": "minimum pusher-to-obstacle surface distance",
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "success_threshold_m": 0.065
+  },
+  "nominal": {
+    "optimized": {
+      "control_energy": 0.00119440028202308,
+      "final_distance_m": 0.05307703029752278,
+      "min_clearance_m": 0.02159802931681791,
+      "success": true
+    },
+    "straight": {
+      "control_energy": 0.046018587670542836,
+      "final_distance_m": 0.15749274721220824,
+      "min_clearance_m": -0.0011341276115012788,
+      "success": false
+    },
+    "video_prior": {
+      "control_energy": 0.0013021974279723576,
+      "final_distance_m": 0.0582325244018686,
+      "min_clearance_m": 0.04060623856015061,
+      "success": true
+    }
+  },
+  "provenance": {
+    "collected_by": "Louis YW",
+    "collection_date": "2026-10-09",
+    "per_frame_calibration_fraction": 1.0,
+    "source_filename": "personal_demo.MOV",
+    "source_sha256": "e6a12a9907155972615d5e0e45dcf46ebf3d3053fc088b32db35ec9b5d34b52d",
+    "synthetic": false,
+    "valid_detection_fraction": 1.0
+  }
+}
